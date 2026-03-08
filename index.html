@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hannakin FC – Match Card Generator</title>
+  <style>
+    /* ─── Reset ──────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #e0e0e0;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    /* ─── App Shell ──────────────────────────────────── */
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ─── Form Panel ─────────────────────────────────── */
+    .form-panel {
+      width: 370px;
+      min-width: 320px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #d0d0d0;
+      overflow-y: auto;
+      padding: 24px 20px 40px;
+    }
+
+    .form-panel-title {
+      font-size: 22px;
+      font-weight: 900;
+      color: #111;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-panel-title .pill {
+      background: #f5a623;
+      color: #000;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 3px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .form-panel-subtitle {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 22px;
+    }
+
+    .form-section {
+      margin-bottom: 18px;
+    }
+
+    .form-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #eee;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #555;
+      margin-bottom: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1.5px solid #d8d8d8;
+      border-radius: 5px;
+      font-size: 13px;
+      color: #111;
+      background: #fafafa;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #f5a623;
+      background: #fffdf7;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .field { flex: 1; margin-bottom: 8px; }
+    .field-sm { flex: 0 0 70px; margin-bottom: 8px; }
+    .field-xs { flex: 0 0 55px; margin-bottom: 8px; }
+
+    /* Teams row */
+    .teams-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .team-col { flex: 1; }
+
+    .team-col-header {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .team-col-header span {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+    }
+
+    .team-col-header .home-tag { background: #eaf4ff; color: #1a73e8; }
+    .team-col-header .away-tag { background: #fff3e0; color: #e65100; }
+
+    /* Scorer rows */
+    .scorer-row {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .scorer-row input[type="text"] { flex: 1; min-width: 0; }
+    .scorer-row input[type="number"] { width: 52px; flex-shrink: 0; }
+    .scorer-row select { width: 58px; flex-shrink: 0; font-size: 11px; padding: 7px 4px; }
+
+    .btn-remove {
+      background: none;
+      border: none;
+      color: #bbb;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .btn-remove:hover { color: #cc0000; }
+
+    .btn-add {
+      width: 100%;
+      background: none;
+      border: 1.5px dashed #ccc;
+      border-radius: 5px;
+      color: #888;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px;
+      margin-top: 4px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-add:hover { border-color: #f5a623; color: #c8820a; }
+
+    /* ─── Preview Panel ───────────────────────────────── */
+    .preview-panel {
+      flex: 1;
+      background: #e0e0e0;
+      overflow-y: auto;
+      padding: 28px 24px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .preview-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #999;
+      margin-bottom: 10px;
+    }
+
+    /* ─── BBC Card ───────────────────────────────────── */
+    .bbc-card {
+      max-width: 640px;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    /* BBC Header */
+    .bbc-header {
+      background: #000;
+    }
+
+    .bbc-topbar {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      gap: 10px;
+    }
+
+    .bbc-logo {
+      display: flex;
+      gap: 2px;
+    }
+
+    .bbc-logo-box {
+      width: 24px;
+      height: 24px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 900;
+      color: #000;
+      letter-spacing: -0.5px;
+    }
+
+    .bbc-sport-label {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+
+    .bbc-nav {
+      background: #1f1f1f;
+      display: flex;
+      overflow-x: auto;
+      border-top: 1px solid #333;
+    }
+
+    .bbc-nav::-webkit-scrollbar { display: none; }
+
+    .bbc-nav-item {
+      color: #ccc;
+      font-size: 13px;
+      font-weight: 400;
+      padding: 10px 14px;
+      white-space: nowrap;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      text-decoration: none;
+      display: block;
+    }
+
+    .bbc-nav-item.active {
+      color: #fff;
+      border-bottom-color: #f5a623;
+      font-weight: 700;
+    }
+
+    .bbc-nav-item:hover { color: #fff; }
+
+    .bbc-breadcrumb {
+      background: #2a2a2a;
+      padding: 7px 16px;
+      font-size: 12px;
+      color: #aaa;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .bbc-breadcrumb a { color: #bbb; text-decoration: none; }
+    .bbc-breadcrumb a:hover { text-decoration: underline; }
+    .bbc-breadcrumb .crumb-sep { color: #666; font-size: 11px; }
+
+    /* Match body */
+    .match-body {
+      background: #0d1014;
+      color: #fff;
+    }
+
+    .match-meta-bar {
+      text-align: center;
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid #1e2428;
+    }
+
+    .match-competition {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #f5a623;
+    }
+
+    .match-date-line {
+      font-size: 12px;
+      color: #7a8fa0;
+      margin-top: 2px;
+    }
+
+    /* Score block */
+    .score-block {
+      display: flex;
+      align-items: stretch;
+      padding: 26px 10px 22px;
+    }
+
+    .score-team {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 0 8px;
+    }
+
+    .team-crest {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: #1e2a35;
+      border: 2px solid #2e3e4a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+      flex-shrink: 0;
+    }
+
+    .team-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+      color: #fff;
+      line-height: 1.25;
+      letter-spacing: 0.3px;
+    }
+
+    .score-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-shrink: 0;
+      padding: 0 12px;
+    }
+
+    .scores-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .score-num {
+      font-size: 58px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      min-width: 38px;
+      text-align: center;
+    }
+
+    .score-divider {
+      font-size: 36px;
+      font-weight: 300;
+      color: #3a4e5c;
+      line-height: 1;
+      padding-bottom: 4px;
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 3px;
+      background: #f5a623;
+      color: #000;
+      text-align: center;
+    }
+
+    .status-badge.live-badge {
+      background: #cc0000;
+      color: #fff;
+      animation: blink 1.6s ease-in-out infinite;
+    }
+
+    .status-badge.pp-badge {
+      background: #555;
+      color: #fff;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.65; }
+    }
+
+    .ht-line {
+      font-size: 11px;
+      color: #6a7f8e;
+      text-align: center;
+    }
+
+    /* Goals section */
+    .goals-section {
+      border-top: 1px solid #1e2428;
+      padding: 14px 16px;
+    }
+
+    .goals-grid {
+      display: flex;
+      gap: 10px;
+    }
+
+    .goals-col {
+      flex: 1;
+    }
+
+    .goals-col-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #4a6070;
+      margin-bottom: 8px;
+    }
+
+    .goals-col.away-col {
+      text-align: right;
+    }
+
+    .goal-line {
+      font-size: 13px;
+      color: #c8d5df;
+      line-height: 1.7;
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+    }
+
+    .goal-line .g-minute {
+      font-size: 11px;
+      color: #5a7285;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .goal-line .g-type {
+      font-size: 11px;
+      color: #7a8fa0;
+    }
+
+    .goals-col.away-col .goal-line {
+      justify-content: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    /* Assists section */
+    .assists-section {
+      border-top: 1px solid #1e2428;
+      padding: 10px 16px;
+    }
+
+    .assists-grid {
+      display: flex;
+      gap: 10px;
+    }
+
+    .assists-col { flex: 1; }
+    .assists-col.away-col { text-align: right; }
+
+    .assists-col-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #4a6070;
+      margin-bottom: 6px;
+    }
+
+    .assist-line {
+      font-size: 12px;
+      color: #8fa0b0;
+      line-height: 1.7;
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+    }
+
+    .assist-line .a-minute {
+      font-size: 11px;
+      color: #4a6070;
+      flex-shrink: 0;
+    }
+
+    .assists-col.away-col .assist-line {
+      justify-content: flex-end;
+      flex-direction: row-reverse;
+    }
+
+    /* Venue bar */
+    .venue-bar {
+      background: #0a0d10;
+      border-top: 1px solid #1a2228;
+      padding: 10px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .venue-item {
+      font-size: 12px;
+      color: #6a7f8e;
+    }
+
+    .venue-item strong {
+      color: #9ab0bf;
+      font-weight: 700;
+    }
+
+    /* ─── Responsive ──────────────────────────────────── */
+    @media (max-width: 760px) {
+      .app { flex-direction: column; }
+      .form-panel { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid #d0d0d0; }
+      .preview-panel { padding: 20px 12px 40px; }
+      .score-num { font-size: 44px; }
+      .team-crest { width: 52px; height: 52px; font-size: 17px; }
+      .team-title { font-size: 12px; }
+      .score-divider { font-size: 28px; }
+      .bbc-card { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ═══ FORM PANEL ═══════════════════════════════════════ -->
+  <div class="form-panel">
+    <div class="form-panel-title">
+      Hannakin FC
+      <span class="pill">Card Gen</span>
+    </div>
+    <div class="form-panel-subtitle">Build a BBC Sport-style match result</div>
+
+    <!-- Match Info -->
+    <div class="form-section">
+      <div class="form-section-title">Match Info</div>
+
+      <div class="form-row">
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="f-date">
+        </div>
+        <div class="field">
+          <label>Competition</label>
+          <input type="text" id="f-comp" placeholder="e.g. Premier League">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="field">
+          <label>Status</label>
+          <select id="f-status">
+            <option value="FT">Full Time (FT)</option>
+            <option value="HT">Half Time (HT)</option>
+            <option value="LIVE">Live</option>
+            <option value="AET">After Extra Time (AET)</option>
+            <option value="PSO">Penalties (PSO)</option>
+            <option value="PP">Postponed (PP)</option>
+          </select>
+        </div>
+        <div class="field-sm" id="minute-field" style="display:none">
+          <label>Minute</label>
+          <input type="text" id="f-minute" placeholder="e.g. 72">
+        </div>
+      </div>
+
+      <!-- HT score (shown only for FT, AET, PSO) -->
+      <div id="ht-score-row" class="form-row">
+        <div class="field">
+          <label>HT Score (Home)</label>
+          <input type="number" id="f-home-ht" min="0" value="0">
+        </div>
+        <div class="field">
+          <label>HT Score (Away)</label>
+          <input type="number" id="f-away-ht" min="0" value="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- Teams -->
+    <div class="form-section teams-row">
+      <div class="team-col">
+        <div class="team-col-header">Home <span class="home-tag">HOME</span></div>
+        <div class="field">
+          <label>Team Name</label>
+          <input type="text" id="f-home-name" placeholder="Home Team">
+        </div>
+        <div class="field">
+          <label>Score</label>
+          <input type="number" id="f-home-score" min="0" value="0">
+        </div>
+      </div>
+      <div class="team-col">
+        <div class="team-col-header">Away <span class="away-tag">AWAY</span></div>
+        <div class="field">
+          <label>Team Name</label>
+          <input type="text" id="f-away-name" placeholder="Away Team">
+        </div>
+        <div class="field">
+          <label>Score</label>
+          <input type="number" id="f-away-score" min="0" value="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- Home Scorers -->
+    <div class="form-section">
+      <div class="form-section-title">Home Goalscorers</div>
+      <div id="home-scorers-list"></div>
+      <button class="btn-add" onclick="addEntry('home-scorers-list', 'scorer')">+ Add Home Scorer</button>
+    </div>
+
+    <!-- Away Scorers -->
+    <div class="form-section">
+      <div class="form-section-title">Away Goalscorers</div>
+      <div id="away-scorers-list"></div>
+      <button class="btn-add" onclick="addEntry('away-scorers-list', 'scorer')">+ Add Away Scorer</button>
+    </div>
+
+    <!-- Home Assists -->
+    <div class="form-section">
+      <div class="form-section-title">Home Assists</div>
+      <div id="home-assists-list"></div>
+      <button class="btn-add" onclick="addEntry('home-assists-list', 'assist')">+ Add Home Assist</button>
+    </div>
+
+    <!-- Away Assists -->
+    <div class="form-section">
+      <div class="form-section-title">Away Assists</div>
+      <div id="away-assists-list"></div>
+      <button class="btn-add" onclick="addEntry('away-assists-list', 'assist')">+ Add Away Assist</button>
+    </div>
+
+    <!-- Venue -->
+    <div class="form-section">
+      <div class="form-section-title">Venue &amp; Details</div>
+      <div class="form-row">
+        <div class="field">
+          <label>Stadium</label>
+          <input type="text" id="f-venue" placeholder="e.g. Old Trafford">
+        </div>
+        <div class="field">
+          <label>Attendance</label>
+          <input type="number" id="f-attendance" placeholder="e.g. 74000">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PREVIEW PANEL ════════════════════════════════════ -->
+  <div class="preview-panel">
+    <div class="preview-label">Live Preview</div>
+
+    <div class="bbc-card" id="bbc-card">
+
+      <!-- BBC Header -->
+      <div class="bbc-header">
+        <div class="bbc-topbar">
+          <div class="bbc-logo">
+            <div class="bbc-logo-box">B</div>
+            <div class="bbc-logo-box">B</div>
+            <div class="bbc-logo-box">C</div>
+          </div>
+          <div class="bbc-sport-label">SPORT</div>
+        </div>
+        <nav class="bbc-nav">
+          <a class="bbc-nav-item active">Football</a>
+          <a class="bbc-nav-item">Cricket</a>
+          <a class="bbc-nav-item">Formula 1</a>
+          <a class="bbc-nav-item">Rugby Union</a>
+          <a class="bbc-nav-item">Tennis</a>
+          <a class="bbc-nav-item">Golf</a>
+          <a class="bbc-nav-item">Athletics</a>
+        </nav>
+      </div>
+
+      <!-- Breadcrumb -->
+      <div class="bbc-breadcrumb">
+        <a href="#">BBC Sport</a>
+        <span class="crumb-sep">›</span>
+        <a href="#">Football</a>
+        <span class="crumb-sep">›</span>
+        <span id="p-crumb">Match Result</span>
+      </div>
+
+      <!-- Match Body -->
+      <div class="match-body">
+
+        <!-- Competition + Date -->
+        <div class="match-meta-bar">
+          <div class="match-competition" id="p-comp">PREMIER LEAGUE</div>
+          <div class="match-date-line" id="p-date"></div>
+        </div>
+
+        <!-- Scores -->
+        <div class="score-block">
+          <div class="score-team">
+            <div class="team-crest" id="p-home-crest">HM</div>
+            <div class="team-title" id="p-home-name">Home Team</div>
+          </div>
+
+          <div class="score-center">
+            <div class="scores-row">
+              <span class="score-num" id="p-home-score">0</span>
+              <span class="score-divider">|</span>
+              <span class="score-num" id="p-away-score">0</span>
+            </div>
+            <div class="status-badge" id="p-status">FT</div>
+            <div class="ht-line" id="p-ht" style="display:none">HT: 0 | 0</div>
+          </div>
+
+          <div class="score-team">
+            <div class="team-crest" id="p-away-crest">AW</div>
+            <div class="team-title" id="p-away-name">Away Team</div>
+          </div>
+        </div>
+
+        <!-- Goals -->
+        <div class="goals-section" id="p-goals-section" style="display:none">
+          <div class="goals-grid">
+            <div class="goals-col" id="p-home-goals">
+              <div class="goals-col-label">Goals</div>
+            </div>
+            <div class="goals-col away-col" id="p-away-goals"></div>
+          </div>
+        </div>
+
+        <!-- Assists -->
+        <div class="assists-section" id="p-assists-section" style="display:none">
+          <div class="assists-grid">
+            <div class="assists-col" id="p-home-assists">
+              <div class="assists-col-label">Assists</div>
+            </div>
+            <div class="assists-col away-col" id="p-away-assists"></div>
+          </div>
+        </div>
+
+        <!-- Venue -->
+        <div class="venue-bar" id="p-venue-bar" style="display:none">
+          <div class="venue-item" id="p-venue-text"></div>
+          <div class="venue-item" id="p-att-text"></div>
+        </div>
+
+      </div><!-- /match-body -->
+    </div><!-- /bbc-card -->
+  </div><!-- /preview-panel -->
+
+</div><!-- /app -->
+
+<script>
+/* ── Unique ID counter ────────────────────────────── */
+let _eid = 0;
+
+/* ── Add dynamic row ──────────────────────────────── */
+function addEntry(listId, type) {
+  const id = ++_eid;
+  const list = document.getElementById(listId);
+  const row = document.createElement('div');
+  row.className = 'scorer-row';
+  row.id = `entry-${id}`;
+
+  if (type === 'scorer') {
+    row.innerHTML = `
+      <input type="text"   placeholder="Player name"  oninput="updatePreview()">
+      <input type="number" placeholder="min" min="1" max="120" oninput="updatePreview()" style="width:52px">
+      <select onchange="updatePreview()" style="width:60px;font-size:11px;padding:7px 3px">
+        <option value="">⚽</option>
+        <option value="OG">OG</option>
+        <option value="P">Pen</option>
+      </select>
+      <button class="btn-remove" onclick="removeEntry(${id})" title="Remove">×</button>
+    `;
+  } else {
+    row.innerHTML = `
+      <input type="text"   placeholder="Player name"  oninput="updatePreview()">
+      <input type="number" placeholder="min" min="1" max="120" oninput="updatePreview()" style="width:52px">
+      <button class="btn-remove" onclick="removeEntry(${id})" title="Remove">×</button>
+    `;
+  }
+
+  list.appendChild(row);
+  updatePreview();
+}
+
+function removeEntry(id) {
+  const el = document.getElementById(`entry-${id}`);
+  if (el) el.remove();
+  updatePreview();
+}
+
+/* ── Collect rows from a list ─────────────────────── */
+function collectRows(listId, hasType) {
+  const rows = document.querySelectorAll(`#${listId} .scorer-row`);
+  const out = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const name  = inputs[0] ? inputs[0].value.trim() : '';
+    const min   = inputs[1] ? inputs[1].value.trim() : '';
+    let type = '';
+    if (hasType) {
+      const sel = row.querySelector('select');
+      type = sel ? sel.value : '';
+    }
+    if (name) out.push({ name, min, type });
+  });
+  return out;
+}
+
+/* ── Initials from team name ─────────────────────── */
+function initials(name) {
+  if (!name.trim()) return '?';
+  const words = name.trim().split(/\s+/);
+  if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+}
+
+/* ── Format date ─────────────────────────────────── */
+function fmtDate(s) {
+  if (!s) return '';
+  const d = new Date(s + 'T12:00:00');
+  const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/* ── Format attendance ───────────────────────────── */
+function fmtAtt(n) {
+  if (!n) return '';
+  return Number(n).toLocaleString('en-GB');
+}
+
+/* ── Build goal lines HTML ───────────────────────── */
+function buildGoalLines(scorers) {
+  if (!scorers.length) return '';
+  return scorers.map(s => {
+    let typeHtml = s.type ? `<span class="g-type">(${s.type})</span>` : '';
+    let minHtml  = s.min  ? `<span class="g-minute">${s.min}'</span>` : '';
+    return `<div class="goal-line">${minHtml}<span>${s.name}</span>${typeHtml}</div>`;
+  }).join('');
+}
+
+/* ── Build assist lines HTML ─────────────────────── */
+function buildAssistLines(assists) {
+  if (!assists.length) return '';
+  return assists.map(a => {
+    let minHtml = a.min ? `<span class="a-minute">${a.min}'</span>` : '';
+    return `<div class="assist-line">${minHtml}<span>${a.name}</span></div>`;
+  }).join('');
+}
+
+/* ── Main update ─────────────────────────────────── */
+function updatePreview() {
+  const homeName  = document.getElementById('f-home-name').value || 'Home Team';
+  const awayName  = document.getElementById('f-away-name').value || 'Away Team';
+  const homeScore = document.getElementById('f-home-score').value ?? '0';
+  const awayScore = document.getElementById('f-away-score').value ?? '0';
+  const homeHT    = document.getElementById('f-home-ht').value   ?? '0';
+  const awayHT    = document.getElementById('f-away-ht').value   ?? '0';
+  const status    = document.getElementById('f-status').value;
+  const minute    = document.getElementById('f-minute').value;
+  const comp      = document.getElementById('f-comp').value || '';
+  const dateStr   = document.getElementById('f-date').value;
+  const venue     = document.getElementById('f-venue').value;
+  const att       = document.getElementById('f-attendance').value;
+
+  const homeScorers  = collectRows('home-scorers-list', true);
+  const awayScorers  = collectRows('away-scorers-list', true);
+  const homeAssists  = collectRows('home-assists-list', false);
+  const awayAssists  = collectRows('away-assists-list', false);
+
+  /* Teams */
+  document.getElementById('p-home-name').textContent  = homeName.toUpperCase();
+  document.getElementById('p-away-name').textContent  = awayName.toUpperCase();
+  document.getElementById('p-home-crest').textContent = initials(homeName);
+  document.getElementById('p-away-crest').textContent = initials(awayName);
+
+  /* Scores */
+  document.getElementById('p-home-score').textContent = homeScore;
+  document.getElementById('p-away-score').textContent = awayScore;
+
+  /* Status badge */
+  const statusEl = document.getElementById('p-status');
+  statusEl.className = 'status-badge';
+  if (status === 'LIVE') {
+    statusEl.textContent = minute ? `${minute}'` : 'LIVE';
+    statusEl.classList.add('live-badge');
+  } else if (status === 'PP') {
+    statusEl.textContent = 'PP';
+    statusEl.classList.add('pp-badge');
+  } else {
+    statusEl.textContent = status;
+  }
+
+  /* Show minute field */
+  document.getElementById('minute-field').style.display = status === 'LIVE' ? 'flex' : 'none';
+
+  /* HT score row visibility */
+  const showHT = ['FT', 'AET', 'PSO'].includes(status);
+  document.getElementById('ht-score-row').style.display = showHT ? 'flex' : 'none';
+
+  /* HT preview line */
+  const htEl = document.getElementById('p-ht');
+  if (showHT) {
+    htEl.style.display = 'block';
+    htEl.textContent = `HT: ${homeHT} | ${awayHT}`;
+  } else {
+    htEl.style.display = 'none';
+  }
+
+  /* Competition & date */
+  const dispComp = comp ? comp.toUpperCase() : 'MATCH RESULT';
+  document.getElementById('p-comp').textContent  = dispComp;
+  document.getElementById('p-crumb').textContent = comp || 'Match Result';
+  document.getElementById('p-date').textContent  = fmtDate(dateStr);
+
+  /* Goals */
+  const hasGoals = homeScorers.length || awayScorers.length;
+  const goalsSection = document.getElementById('p-goals-section');
+  goalsSection.style.display = hasGoals ? 'block' : 'none';
+  if (hasGoals) {
+    const hg = document.getElementById('p-home-goals');
+    const ag = document.getElementById('p-away-goals');
+    hg.innerHTML = '<div class="goals-col-label">Goals</div>' + buildGoalLines(homeScorers);
+    ag.innerHTML = buildGoalLines(awayScorers);
+  }
+
+  /* Assists */
+  const hasAssists = homeAssists.length || awayAssists.length;
+  const assistsSection = document.getElementById('p-assists-section');
+  assistsSection.style.display = hasAssists ? 'block' : 'none';
+  if (hasAssists) {
+    const ha = document.getElementById('p-home-assists');
+    const aa = document.getElementById('p-away-assists');
+    ha.innerHTML = '<div class="assists-col-label">Assists</div>' + buildAssistLines(homeAssists);
+    aa.innerHTML = buildAssistLines(awayAssists);
+  }
+
+  /* Venue bar */
+  const venueBar = document.getElementById('p-venue-bar');
+  if (venue || att) {
+    venueBar.style.display = 'flex';
+    document.getElementById('p-venue-text').innerHTML = venue ? `<strong>Venue:</strong> ${venue}` : '';
+    document.getElementById('p-att-text').innerHTML   = att   ? `<strong>Att:</strong> ${fmtAtt(att)}` : '';
+  } else {
+    venueBar.style.display = 'none';
+  }
+}
+
+/* ── Wire up all static inputs ───────────────────── */
+const liveInputs = [
+  'f-date','f-comp','f-home-name','f-away-name',
+  'f-home-score','f-away-score','f-home-ht','f-away-ht',
+  'f-venue','f-attendance','f-minute'
+];
+liveInputs.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('input',  updatePreview);
+    el.addEventListener('change', updatePreview);
+  }
+});
+
+document.getElementById('f-status').addEventListener('change', updatePreview);
+
+/* ── Set today's date as default ─────────────────── */
+document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+
+/* ── Initial render ──────────────────────────────── */
+updatePreview();
+</script>
+</body>
+</html>
